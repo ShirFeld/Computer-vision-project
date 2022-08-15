@@ -1,0 +1,76 @@
+Metadata-Version: 2.1
+Name: plotting
+Version: 0.0.7
+Summary: UNKNOWN
+Home-page: UNKNOWN
+Author: Michael Rossol
+Author-email: mrossol@gmail.com
+License: BSD license
+Keywords: rev
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Requires-Dist: matplotlib
+Requires-Dist: seaborn
+Requires-Dist: pandas
+Provides-Extra: dev
+Requires-Dist: flake8 ; extra == 'dev'
+Requires-Dist: pre-commit ; extra == 'dev'
+Requires-Dist: pylint ; extra == 'dev'
+
+********
+plotting
+********
+
+.. image:: https://github.com/mrossol/plotting/workflows/Documentation/badge.svg
+    :target: https://mrossol.github.io/plotting/
+
+.. image:: https://img.shields.io/pypi/pyversions/plotting.svg
+    :target: https://pypi.org/project/plotting/
+
+.. image:: https://badge.fury.io/py/plotting.svg
+    :target: https://badge.fury.io/py/plotting
+
+.. image:: https://anaconda.org/mrossol/plotting/badges/version.svg
+    :target: https://anaconda.org/mrossol/plotting
+
+.. image:: https://anaconda.org/mrossol/plotting/badges/platforms.svg
+    :target: https://anaconda.org/mrossol/plotting
+
+.. image:: https://anaconda.org/mrossol/plotting/badges/license.svg
+    :target: https://anaconda.org/mrossol/plotting
+
+A plotting wrapper on `matplotlib <https://matplotlib.org/index.html>`_ and `seaborn <https://seaborn.pydata.org/>`_ to enable single function plotting calls a la mathematica
+
+.. inclusion-intro
+
+Installation
+==============
+
+    1) ``pip install plotting`` or
+    2) ``conda install plotting --channel=mrossol``
+
+Development
+============
+
+If you want to contribute to this package:
+
+1. Clone the repository: ``git clone https://github.com/mrossol/plotting.git``
+    1) enter github username
+    2) enter github password
+
+2. Install the pacakge
+    1) cd into plotting repo cloned above
+    2) run ``pip install -e .``
+
+3. Check that plotting was installed successfully
+    .. code-block:: python
+
+        import plotting
+
+
