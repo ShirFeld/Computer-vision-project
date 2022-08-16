@@ -151,18 +151,17 @@ class DigitalImaging:
         :param pic_list:
         :return:dic
         """
-        dic ={}
+        dic = {}
         for i in range(0, len(pic_list)):
             value = np.array(pic_list[i])
             value_shape = value.shape
             dic[i] = value_shape
 
-
         # item[1][0] - will give us the first value of the tuple = height
         return dict(sorted(dic.items(), key=lambda item: item[1][0]))
 
     # Question 6
-    def detect_obj(self, path:str, part2detect:str):
+    def detect_obj(self, path: str, part2detect: str):
         """
          This method searches an eyes or faces in the given picture
          and returns an Image object with all findings surrounded by a green rectangle.
@@ -172,68 +171,114 @@ class DigitalImaging:
         """
         flag = False
         model = ""
-        color = (0,0,0)
-        part_in_low_case = part2detect.lower() # convert the part2detect to lower case
+        color = (0, 0, 0)
+        part_in_low_case = part2detect.lower()  # convert the part2detect to lower case
 
         img = cv2.imread(path, cv2.IMREAD_COLOR)
         gray_img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
         cv2.imshow(path, cv2.IMREAD_COLOR)
         img2rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        if(part_in_low_case.__eq__("eyes")):
+        if (part_in_low_case.__eq__("eyes")):
             model = "haarcascade_eye.xml"
-        elif(part_in_low_case.__eq__("face")):
+            color = (0, 0, 0)  # paint the rectangle in black (black = 0)
+        elif (part_in_low_case.__eq__("face")):
             model = "haarcascade_frontalface_default.xml"
+            color = (0, 255, 0)  # paint the rectangle in green (green = 255)
         else:
             print("This part wasn't recognize, please try again")
             return
 
-        color = (0, 255, 0)  # paint the rectangle in green (green = 255)
-        classifier = cv2.CascadeClassifier(cv2.data.haarcascades + model)
-        detector = classifier.detectMultiScale(gray_img, 2.3, 4)  #img , size , neighbors
+        detector = service.detect_me(gray_img, model)  # img , size , neighbors
         if isinstance(detector, np.ndarray):
-            flag = True
-            for (_row, _column, _w, _h) in detector:
-                cv2.rectangle(img2rgb,
-                    (_row, _column),
-                    (_row+_w, _column+_h),
-                    color,
-                    3)
-        if (flag):
-            return img2rgb
+            return service.draw_a_square(img2rgb, detector, color)
         return
 
-    # Question 7
+    def detect_me(self, img, model):
+        classifier = cv2.CascadeClassifier(cv2.data.haarcascades + model)
+        return classifier.detectMultiScale(img, 1.7, 5)  # img-to-scan , down-scale-cofficient , neighbors
 
+    def draw_a_square(self, img2rgb, arr: np.ndarray, color):
+        for (_x, _y, _w, _h) in arr:
+            cv2.rectangle(
+                img2rgb,
+                (_x, _y),
+                (_x + _w, _y + _h),
+                color,
+                3)
+        return img2rgb
+
+    # Question 7
+    def detect_obj_adv(self, path, get_eyes, get_face):
+        """
+        This method accepts a path to the image and two boolean variables.
+         The method will return an image with the members marked according to the variables it received.
+        :param path: Path to the image location
+        :param get_eyes: Boolean var
+        :param get_face: Boolean var
+        :return: An image with the members marked according to the variables
+        """
+        img = cv2.imread(path, cv2.IMREAD_COLOR)
+        gray_img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+        img2rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        if (get_eyes or get_face):
+            if (get_eyes):
+                res = service.detect_me(gray_img,
+                                        "haarcascade_eye.xml")  # call the "detect_me" helper function with the training model to detect eyes
+                img2rgb = service.draw_a_square(img2rgb, res, (
+                    0, 255, 0))  # draw a green square around an area with eyes, if and as much as where found
+            if (get_face):
+                res = service.detect_me(gray_img,
+                                        "haarcascade_frontalface_default.xml")  # call the "detect_me" helper function with the training model to find a face
+                img2rgb = service.draw_a_square(img2rgb, res, (
+                    0, 0, 0))  # draw a black square around an area with a face, if and as much as where found
+        return img2rgb
 
     # Question 8
-    def detect_face_in_vid(self,video_path):
+    def detect_face_in_vid(self, video_input, video_output, get_eyes, get_face):
         """
         This method gets a path of a video and detects all the faces in that video.
         :param video_path: A path of a video.
-        :return: Void
+        :param get_eyes:
+        :param get_face:
+        :return: void
         """
-        video = cv2.VideoCapture("video_path")
-        classifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+        cap = cv2.VideoCapture(video_input)
 
-        while video.isOpened():
-            ret, frame = video.read()
-            # if frame is read correctly ret is True
-            if not ret:
-                print("Can't receive frame (stream end?). Exiting ...")
+        frame_width = int(cap.get(3))
+        frame_height = int(cap.get(4))
+        frame_size = (frame_width, frame_height)
+        fps = 15
+
+        codec = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
+        out = cv2.VideoWriter(video_output, codec, fps, frame_size)
+
+        if cap.isOpened():
+            ret, frame = cap.read()
+        else:
+            ret = False
+
+        while ret:
+            ret, frame = cap.read()
+            gray = cv2.cvtColor(frame, cv2.IMREAD_GRAYSCALE)
+            img2rgb = cv2.cvtColor(frame, cv2.IMREAD_COLOR)
+            if (get_eyes or get_face):
+                if (get_eyes):
+                    res = service.detect_me(gray, "haarcascade_eye.xml")
+                    img2rgb = service.draw_a_square(img2rgb, res, (0, 255, 0))
+                if (get_face):
+                    res = service.detect_me(gray, "haarcascade_frontalface_default.xml")
+                    img2rgb = service.draw_a_square(img2rgb, res, (50, 255, 255))
+            out.write(img2rgb)
+
+            cv2.imshow('image to write', img2rgb)
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            # Detect the faces
-            faces = classifier.detectMultiScale(gray, 1.1, 4)
 
-            for (x, y, w, h) in faces:
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0,255, 0), 2)
-            cv2.imshow('video', frame) # Display
-
-            if cv2.waitKey(1) == ord(27):  #This function is the only method in HighGUI that can fetch and handle events
-                break
-        video.release()
         cv2.destroyAllWindows()
+        cap.release()
+        out.release()
 
 
 if __name__ == '__main__':
@@ -245,7 +290,6 @@ if __name__ == '__main__':
     img4 = Image.open('img4.jpg')
     img5 = Image.open('img3.jpg')
     pic_list = [img, img2, img3, img4, img5, img3, img4, img5, img4, img5, img3, img4, img5]
-
 
     service = DigitalImaging()
     print(" question 1")
@@ -265,8 +309,8 @@ if __name__ == '__main__':
 
     print(" question 5")
     ## For question 5
-    #result = service.shapes_dict(pic_list)
-    #print(result)
+    # result = service.shapes_dict(pic_list)
+    # print(result)
 
     print(" question 6")
     ## For question 6
@@ -278,3 +322,14 @@ if __name__ == '__main__':
 
     print(" question 7")
     ## For question 7
+    # result = service.detect_obj_adv("question6.jpg", True, True)
+    # if isinstance(result, np.ndarray):
+    #     Image.fromarray(result).show()
+    # else:
+    #     print("fail")
+
+    print(" question 8")
+    ## For question 8
+    video_input = 'C:/Users/user/PycharmProjects/haarcascade/kmeans/video_3.mp4'
+    video_output = 'C:/Users/user/PycharmProjects/haarcascade/kmeans/output_3_eye.mp4'
+    service.detect_face_in_vid(video_input, video_output, True, False)
